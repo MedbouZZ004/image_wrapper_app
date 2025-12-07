@@ -3,17 +3,19 @@ from PIL import Image, ImageDraw, ImageFont
 import io
 import os
 
-# --- Helper Function for Roman Numerals ---
-def to_roman(num):
-    """Converts an integer (1-5) to its Roman numeral representation."""
-    roman_map = {1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V'}
-    return roman_map.get(num, str(num))
+# --- Helper Function for Letter Labels ---
+def to_letter(num):
+    """Converts an integer (1-5) to its corresponding lowercase letter (a-e)."""
+    # ASCII for 'a' is 97. Add (num - 1) to get the correct letter code.
+    if 1 <= num <= 5:
+        return chr(96 + num)
+    return str(num) # Fallback if number is out of range
 
 # --- Core Image Processing Function ---
 def process_and_combine_images(image_files, target_height=400):
     """
     Combines a list of image files horizontally, resizing them to a target height
-    and adding Roman numeral labels.
+    and adding letter labels.
 
     :param image_files: List of uploaded Streamlit file objects.
     :param target_height: The uniform height for all resized images.
@@ -48,9 +50,10 @@ def process_and_combine_images(image_files, target_height=400):
         # Resize to the target height (Symmetric/Same Size Requirement)
         img_resized = img.resize((new_width, target_height))
         
-        # 3. Add Roman Numeral Label (I, II, III, ...)
+        # 3. Add Letter Label (a, b, c, ...)
         draw = ImageDraw.Draw(img_resized)
-        label_text = to_roman(i + 1)
+        # *** MODIFICATION HERE: Using the updated to_letter function ***
+        label_text = to_letter(i + 1)
         
         # Determine text position (10 pixels from the left, slightly above the bottom)
         text_y_offset = font_size * 1.5 if font != ImageFont.load_default() else 25
@@ -97,13 +100,11 @@ uploaded_files = st.file_uploader(
 if uploaded_files:
     if len(uploaded_files) > 5:
         st.error("⚠️ Maximum of 5 images allowed. Please remove some files.")
-        # Only process the first 5 images if more are uploaded
         uploaded_files = uploaded_files[:5] 
 
     st.success(f"Processing {len(uploaded_files)} image(s)...")
 
     # 📏 Uniform Height Setting
-    # This allows the user to control the final image size
     target_height = st.slider(
         "2. **Set the Uniform Height** (in pixels) for all images:",
         min_value=200, 
@@ -122,15 +123,13 @@ if uploaded_files:
     
     if combined_image_bytes:
         st.header("✨ Generated Image Preview")
-        
-        # Show the preview
-        st.image(combined_image_bytes, caption="Final Combined Image")
+        st.image(combined_image_bytes, caption="Final Combined Image (a, b, c, ...)")
 
         # ⬇️ Download Button
         st.download_button(
             label="⬇️ Download Combined Image (PNG)",
             data=combined_image_bytes,
-            file_name="medical_evolution_row.png",
+            file_name="medical_evolution_row_a_to_e.png",
             mime="image/png"
         )
         
